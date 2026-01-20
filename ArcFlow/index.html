@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcFlow - AI Automation Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">ArcFlow</span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link active">Home</a>
+                <a href="work.html" class="nav-link">Workflows</a>
+                <a href="credits.html" class="nav-link">Credentials</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" class="mobile-link active">Home</a>
+        <a href="work.html" class="mobile-link">Workflows</a>
+        <a href="credits.html" class="mobile-link">Credentials</a>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="hero-glow"></div>
+            <div class="hero-grid"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">Built for Arc.Network by Circle.com</div>
+            <h1 class="hero-title">
+                <span class="gradient-text">ArcFlow</span>
+            </h1>
+            <p class="hero-subtitle">AI-Powered Automation Platform</p>
+            <p class="hero-description">
+                Build powerful automation workflows with our visual editor.
+                Connect AI models, triggers, and agents to create intelligent
+                automation pipelines without writing code.
+            </p>
+            <div class="hero-buttons">
+                <a href="work.html" class="btn btn-primary">
+                    <span class="btn-icon">⚡</span>
+                    Start Building
+                </a>
+                <a href="#features" class="btn btn-secondary">
+                    Learn More
+                </a>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card card-1">
+                <div class="card-icon">🤖</div>
+                <span>Gemini AI</span>
+            </div>
+            <div class="floating-card card-2">
+                <div class="card-icon">⚡</div>
+                <span>Triggers</span>
+            </div>
+            <div class="floating-card card-3">
+                <div class="card-icon">🔗</div>
+                <span>Connect</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURES SECTION -->
+    <section class="features" id="features">
+        <div class="section-header">
+            <h2 class="section-title">Powerful Features</h2>
+            <p class="section-subtitle">Everything you need to automate your workflows</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>⚡</span>
+                </div>
+                <h3>Visual Workflow Builder</h3>
+                <p>Drag and drop nodes to create complex automation workflows without any coding knowledge.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🤖</span>
+                </div>
+                <h3>AI Model Integration</h3>
+                <p>Connect to Gemini, OpenAI, and Claude AI models to power your automations with intelligence.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🔐</span>
+                </div>
+                <h3>Secure Credentials</h3>
+                <p>Store your API keys securely and use them across multiple workflows effortlessly.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">
+                    <span>🚀</span>
+                </div>
+                <h3>One-Click Execution</h3>
+                <p>Execute your workflows instantly and see results in real-time with detailed logs.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA SECTIONS -->
+    <section class="cta-section">
+        <div class="cta-card">
+            <div class="cta-content">
+                <div class="cta-icon">⚡</div>
+                <h2>Workflows</h2>
+                <p>Create powerful automation workflows with our intuitive visual builder. Connect triggers, AI models,
+                    and agents to build complex pipelines.</p>
+                <a href="work.html" class="btn btn-primary">
+                    Manage Workflows
+                </a>
+            </div>
+        </div>
+        <div class="cta-card">
+            <div class="cta-content">
+                <div class="cta-icon">🔐</div>
+                <h2>Credentials</h2>
+                <p>Securely store and manage your API keys. Connect to AI services and use credentials across all your
+                    workflows.</p>
+                <a href="credits.html" class="btn btn-primary">
+                    Manage Credentials
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">
+                <span class="logo-icon">⚡</span>
+                <span>ArcFlow</span>
+            </div>
+            <p class="footer-text">Built for Arc.Network Hackathon by Circle.com</p>
+            <p class="footer-copyright">© 2024 ArcFlow. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <!-- Disclaimer Popup -->
+    <div id="disclaimerModal" class="disclaimer-overlay">
+        <div class="disclaimer-modal">
+            <div class="disclaimer-header">
+                <span class="disclaimer-brand">Made By Instaflect AI</span>
+                <h2>⚠️ Important Security Notice</h2>
+            </div>
+            <div class="disclaimer-content">
+                <p><strong>Before using ArcFlow, please read carefully:</strong></p>
+                <ul>
+                    <li>🔑 <strong>Use NEW API keys</strong> created specifically for testing on this platform</li>
+                    <li>🗑️ <strong>Delete your credentials</strong> after you're done using this website</li>
+                    <li>💳 <strong>DO NOT use API keys</strong> that have billing or payment methods attached</li>
+                    <li>🔒 <strong>For your safety</strong>, treat all credentials used here as temporary</li>
+                </ul>
+                <p class="disclaimer-warning">
+                    This is a demo platform. We recommend using free-tier or test credentials only.
+                </p>
+            </div>
+            <div class="disclaimer-footer">
+                <label class="disclaimer-checkbox">
+                    <input type="checkbox" id="disclaimerAgree">
+                    <span>I understand and accept these terms</span>
+                </label>
+                <button id="disclaimerAccept" class="disclaimer-btn" disabled>Continue to ArcFlow</button>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="disclaimer.css">
+    <script src="disclaimer.js"></script>
+
+</body>
+
+</html>

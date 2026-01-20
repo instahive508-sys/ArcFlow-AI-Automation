@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcFlow - Workflow Editor</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="editor-page">
+
+    <!-- EDITOR TOP BAR -->
+    <div class="editor-topbar">
+        <div class="topbar-left">
+            <a href="work.html" class="back-btn">
+                <span>←</span>
+            </a>
+            <button class="nodes-toggle" id="nodesToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <input type="text" class="workflow-title" id="workflowTitle" value="Untitled Workflow">
+        </div>
+        <div class="topbar-center">
+            <span class="workflow-id" id="workflowId">ID: ---</span>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-action save-action" id="saveBtn">
+                <span class="action-icon">💾</span>
+                <span class="action-text">Save</span>
+            </button>
+            <button class="topbar-action delete-action" id="deleteBtn">
+                <span class="action-icon">🗑️</span>
+                <span class="action-text">Delete</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- NODES PANEL -->
+    <div class="nodes-panel" id="nodesPanel">
+        <div class="panel-header">
+            <h3>Add Nodes</h3>
+            <button class="panel-close" id="panelClose">×</button>
+        </div>
+        <div class="panel-search">
+            <input type="text" id="nodeSearch" placeholder="Search nodes...">
+        </div>
+        <div class="panel-sections">
+            <!-- Dynamically generated from NodeDefinitions -->
+        </div>
+    </div>
+
+    <!-- PANEL OVERLAY -->
+    <div class="panel-overlay" id="panelOverlay"></div>
+
+    <!-- CANVAS -->
+    <div class="editor-canvas" id="editorCanvas">
+        <div class="canvas-grid"></div>
+        <div class="canvas-placeholder" id="canvasPlaceholder">
+            <div class="placeholder-icon">+</div>
+            <p>Click the menu to add nodes</p>
+            <span>Build your automation workflow</span>
+        </div>
+        <div class="canvas-nodes" id="canvasNodes"></div>
+    </div>
+
+    <!-- CONFIG PANEL -->
+    <div class="config-panel" id="configPanel">
+        <div class="config-header">
+            <h3 id="configTitle">Configure Node</h3>
+            <button class="config-close" id="configClose">×</button>
+        </div>
+        <div class="config-body" id="configBody"></div>
+    </div>
+
+    <!-- BOTTOM BAR -->
+    <div class="editor-bottombar">
+        <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut">−</button>
+            <span class="zoom-level" id="zoomLevel">100%</span>
+            <button class="zoom-btn" id="zoomIn">+</button>
+        </div>
+        <div class="execution-controls">
+            <button class="clear-exec-btn" id="clearExecutionBtn">
+                <span>🗑️</span>
+                <span class="btn-text">Clear Execution</span>
+            </button>
+            <button class="execute-btn" id="executeBtn">
+                <span>▶</span>
+                <span class="btn-text">Execute Workflow</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
+        <div class="notification-icon" id="notificationIcon">✓</div>
+        <span class="notification-message" id="notificationMessage"></span>
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h3>Delete Workflow?</h3>
+            <p>This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelDelete">Cancel</button>
+                <button class="modal-btn confirm" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- EXECUTION MODAL -->
+    <div class="modal-overlay" id="executionModal">
+        <div class="modal-box execution-box">
+            <div class="modal-icon" id="execIcon">⚡</div>
+            <h3 id="execTitle">Executing...</h3>
+            <div class="execution-output" id="execOutput">
+                <pre id="execLog"></pre>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="closeExecution" style="display: none;">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UNSAVED CHANGES MODAL -->
+    <div class="modal-overlay" id="unsavedModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h3>Unsaved Changes</h3>
+            <p>You have unsaved changes. Do you want to save before leaving?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="discardChanges">Leave Without Saving</button>
+                <button class="modal-btn confirm" id="saveAndLeave"
+                    style="background: linear-gradient(135deg, #10b981, #059669);">Save & Leave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="script.js"></script>
+    <script src="nodes1.js"></script>
+
+    <!-- Disclaimer Popup -->
+    <div id="disclaimerModal" class="disclaimer-overlay">
+        <div class="disclaimer-modal">
+            <div class="disclaimer-header">
+                <span class="disclaimer-brand">Made By Instaflect AI</span>
+                <h2>⚠️ Important Security Notice</h2>
+            </div>
+            <div class="disclaimer-content">
+                <p><strong>Before using ArcFlow, please read carefully:</strong></p>
+                <ul>
+                    <li>🔑 <strong>Use NEW API keys</strong> created specifically for testing on this platform</li>
+                    <li>🗑️ <strong>Delete your credentials</strong> after you're done using this website</li>
+                    <li>💳 <strong>DO NOT use API keys</strong> that have billing or payment methods attached</li>
+                    <li>🔒 <strong>For your safety</strong>, treat all credentials used here as temporary</li>
+                </ul>
+                <p class="disclaimer-warning">
+                    This is a demo platform. We recommend using free-tier or test credentials only.
+                </p>
+            </div>
+            <div class="disclaimer-footer">
+                <label class="disclaimer-checkbox">
+                    <input type="checkbox" id="disclaimerAgree">
+                    <span>I understand and accept these terms</span>
+                </label>
+                <button id="disclaimerAccept" class="disclaimer-btn" disabled>Continue to ArcFlow</button>
+            </div>
+        </div>
+    </div>
+    <link rel="stylesheet" href="disclaimer.css">
+    <script src="disclaimer.js"></script>
+
+</body>
+
+</html>

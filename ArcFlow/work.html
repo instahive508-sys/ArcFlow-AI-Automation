@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcFlow - Workflows</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">
+                <span class="logo-icon">⚡</span>
+                <span class="logo-text">ArcFlow</span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html" class="nav-link">Home</a>
+                <a href="work.html" class="nav-link active">Workflows</a>
+                <a href="credits.html" class="nav-link">Credentials</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MOBILE MENU -->
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="index.html" class="mobile-link">Home</a>
+        <a href="work.html" class="mobile-link active">Workflows</a>
+        <a href="credits.html" class="mobile-link">Credentials</a>
+    </div>
+
+    <!-- PAGE HEADER -->
+    <section class="page-header">
+        <div class="page-header-bg"></div>
+        <div class="page-header-content">
+            <h1>Workflows</h1>
+            <p>Build and manage your automation workflows</p>
+            <button class="btn btn-primary" id="createWorkflowBtn">
+                <span class="btn-icon">+</span>
+                Create Workflow
+            </button>
+        </div>
+    </section>
+
+    <!-- WORKFLOWS LIST -->
+    <section class="items-section">
+        <div class="items-container" id="workflowsContainer">
+            <!-- Workflows will be loaded here -->
+        </div>
+        <div class="empty-state" id="emptyState">
+            <div class="empty-icon">⚡</div>
+            <h3>No Workflows Yet</h3>
+            <p>Create your first workflow to start automating</p>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="footer footer-simple">
+        <p>© 2024 ArcFlow. All rights reserved.</p>
+    </footer>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
+        <div class="notification-icon" id="notificationIcon">✓</div>
+        <span class="notification-message" id="notificationMessage"></span>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

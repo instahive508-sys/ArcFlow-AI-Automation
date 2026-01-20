@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArcFlow - Edit API Key</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="editor-page">
+
+    <!-- EDITOR TOP BAR -->
+    <div class="editor-topbar">
+        <div class="topbar-left">
+            <a href="credits.html" class="back-btn">
+                <span>←</span>
+            </a>
+            <input type="text" class="workflow-title" id="credentialTitle" value="Untitled API Key">
+            <span id="unsavedBadge"
+                style="display:none; background:var(--warning); color:black; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:10px;">UNSAVED</span>
+        </div>
+        <div class="topbar-center">
+            <span class="workflow-id" id="credentialId">ID: ---</span>
+        </div>
+        <div class="topbar-right">
+            <button class="topbar-action save-action" id="saveBtn">
+                <span class="action-icon">💾</span>
+                <span class="action-text">Save</span>
+            </button>
+            <button class="topbar-action delete-action" id="deleteBtn">
+                <span class="action-icon">🗑️</span>
+                <span class="action-text">Delete</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CREDENTIAL FORM -->
+    <div class="credential-editor">
+        <div class="credential-form">
+            <div class="form-card">
+                <h3 class="form-title">Credential Details</h3>
+
+                <div class="form-field">
+                    <label for="apiName">Name</label>
+                    <input type="text" id="apiName" placeholder="e.g. My Account">
+                </div>
+
+                <div class="form-field">
+                    <label for="credType">Type</label>
+                    <select id="credType">
+                        <option value="circle_developer">Circle Developer (WaaS)</option>
+                        <option value="arc_wallet">Arc Network Wallet</option>
+                        <option value="arcscan">ArcScan API</option>
+                        <option value="google_oauth2">Google OAuth2 API</option>
+                        <option value="openai_api">OpenAI API Key</option>
+                        <option value="http_header">Header Auth</option>
+                    </select>
+                </div>
+
+                <div id="dynamicFields">
+                    <!-- Fields injected by JS based on Type -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="notification" id="notification">
+        <div class="notification-icon" id="notificationIcon">✓</div>
+        <span class="notification-message" id="notificationMessage"></span>
+    </div>
+
+    <!-- DELETE MODAL -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h3>Delete API Key?</h3>
+            <p>This action cannot be undone.</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="cancelDelete">Cancel</button>
+                <button class="modal-btn confirm" id="confirmDelete">Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+
+    <!-- UNSAVED CHANGES MODAL -->
+    <div class="modal-overlay" id="unsavedModal">
+        <div class="modal-box">
+            <div class="modal-icon">⚠️</div>
+            <h3>Unsaved Changes</h3>
+            <p>You have unsaved changes. Do you want to save before leaving?</p>
+            <div class="modal-buttons">
+                <button class="modal-btn cancel" id="discardChanges">Leave Without Saving</button>
+                <button class="modal-btn confirm" id="saveAndLeave"
+                    style="background: linear-gradient(135deg, #10b981, #059669);">Save & Leave</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Replace the existing inline script with this -->
+    <script>
+        var hasUnsavedChangesValue = false;
+
+        // Use a proxy-like pattern for hasUnsavedChanges to update UI
+        Object.defineProperty(window, 'hasUnsavedChanges', {
+            get: function () { return hasUnsavedChangesValue; },
+            set: function (val) {
+                hasUnsavedChangesValue = val;
+                var badge = document.getElementById('unsavedBadge');
+                if (badge) badge.style.display = val ? 'inline-block' : 'none';
+            }
+        });
+
+        var currentType = 'google-oauth';
+        var currentCredential = null;
+
+        // CREDENTIAL TYPE CONFIGURATIONS
+        var credentialTypes = {
+            'google-oauth': {
+                label: 'Google Account (OAuth)',
+                fields: [
+                    { id: 'clientId', label: 'Client ID', type: 'text', placeholder: 'Your Google OAuth Client ID' },
+                    { id: 'clientSecret', label: 'Client Secret', type: 'password', placeholder: 'Your Google OAuth Client Secret' }
+                ],
+                oauth: true,
+                scopes: 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.modify https://www.googleapis.com/auth/calendar'
+            },
+            'gemini': {
+                label: 'Google Gemini AI',
+                fields: [
+                    { id: 'apiKey', label: 'API Key', type: 'password', placeholder: 'Your Gemini API Key from AI Studio' }
+                ]
+            },
+            'openai': {
+                label: 'OpenAI',
+                fields: [
+                    { id: 'apiKey', label: 'API Key', type: 'password', placeholder: 'sk-...' },
+                    { id: 'organizationId', label: 'Organization ID (optional)', type: 'text', placeholder: 'org-...' }
+                ]
+            },
+            'anthropic': {
+                label: 'Anthropic (Claude)',
+                fields: [
+                    { id: 'apiKey', label: 'API Key', type: 'password', placeholder: 'sk-ant-...' }
+                ]
+            },
+            'github': {
+                label: 'GitHub',
+                fields: [
+                    { id: 'accessToken', label: 'Personal Access Token', type: 'password', placeholder: 'ghp_...' },
+                    { id: 'baseUrl', label: 'Base URL (for Enterprise)', type: 'text', placeholder: 'https://api.github.com' }
+                ]
+            },
+            'notion': {
+                label: 'Notion',
+                fields: [
+                    { id: 'apiKey', label: 'Integration Token', type: 'password', placeholder: 'secret_...' }
+                ]
+            },
+            'airtable': {
+                label: 'Airtable',
+                fields: [
+                    { id: 'apiKey', label: 'Personal Access Token', type: 'password', placeholder: 'pat...' }
+                ]
+            },
+            'twilio': {
+                label: 'Twilio',
+                fields: [
+                    { id: 'accountSid', label: 'Account SID', type: 'text', placeholder: 'AC...' },
+                    { id: 'authToken', label: 'Auth Token', type: 'password' }
+                ]
+            },
+            'sendgrid': {
+                label: 'SendGrid',
+                fields: [
+                    { id: 'apiKey', label: 'API Key', type: 'password', placeholder: 'SG...' }
+                ]
+            },
+            'stripe': {
+                label: 'Stripe',
+                fields: [
+                    { id: 'secretKey', label: 'Secret Key', type: 'password', placeholder: 'sk_live_... or sk_test_...' }
+                ]
+            },
+            'hubspot': {
+                label: 'HubSpot',
+                fields: [
+                    { id: 'accessToken', label: 'Private App Access Token', type: 'password', placeholder: 'pat-...' }
+                ]
+            },
+            'supabase': {
+                label: 'Supabase',
+                fields: [
+                    { id: 'projectUrl', label: 'Project URL', type: 'text', placeholder: 'https://your-project.supabase.co' },
+                    { id: 'apiKey', label: 'anon/public Key', type: 'password', placeholder: 'eyJ...' },
+                    { id: 'serviceKey', label: 'Service Role Key (optional)', type: 'password', placeholder: 'eyJ... (for admin operations)' }
+                ]
+            },
+            'postgres': {
+                label: 'PostgreSQL',
+                fields: [
+                    { id: 'host', label: 'Host', type: 'text', placeholder: 'localhost' },
+                    { id: 'port', label: 'Port', type: 'number', placeholder: '5432' },
+                    { id: 'database', label: 'Database', type: 'text', placeholder: 'mydb' },
+                    { id: 'user', label: 'Username', type: 'text', placeholder: 'postgres' },
+                    { id: 'password', label: 'Password', type: 'password', placeholder: 'Your password' },
+                    { id: 'ssl', label: 'SSL Mode', type: 'select', options: ['disable', 'require', 'verify-ca', 'verify-full'] }
+                ]
+            },
+            'mysql': {
+                label: 'MySQL',
+                fields: [
+                    { id: 'host', label: 'Host', type: 'text', placeholder: 'localhost' },
+                    { id: 'port', label: 'Port', type: 'number', placeholder: '3306' },
+                    { id: 'database', label: 'Database', type: 'text', placeholder: 'mydb' },
+                    { id: 'user', label: 'Username', type: 'text', placeholder: 'root' },
+                    { id: 'password', label: 'Password', type: 'password', placeholder: 'Your password' }
+                ]
+            },
+            'slack': {
+                label: 'Slack',
+                fields: [
+                    { id: 'apiKey', label: 'Bot User OAuth Token', type: 'password', placeholder: 'xoxb-...' },
+                    { id: 'signingSecret', label: 'Signing Secret', type: 'password', placeholder: 'Found in Basic Information' }
+                ]
+            },
+            'discord-webhook': {
+                label: 'Discord Webhook',
+                fields: [
+                    { id: 'webhookUrl', label: 'Webhook URL', type: 'text', placeholder: 'https://discord.com/api/webhooks/...' }
+                ]
+            },
+            'telegram': {
+                label: 'Telegram Bot',
+                fields: [
+                    { id: 'botToken', label: 'Bot Token', type: 'password', placeholder: '123456789:ABC-DEF...' }
+                ]
+            },
+            'smtp': {
+                label: 'SMTP Email',
+                fields: [
+                    { id: 'host', label: 'SMTP Host', type: 'text', placeholder: 'smtp.gmail.com' },
+                    { id: 'port', label: 'Port', type: 'number', placeholder: '587' },
+                    { id: 'user', label: 'Username', type: 'text', placeholder: 'you@gmail.com' },
+                    { id: 'password', label: 'Password', type: 'password', placeholder: 'App password' },
+                    { id: 'from', label: 'From Email', type: 'text', placeholder: 'you@gmail.com' },
+                    { id: 'secure', label: 'Use TLS', type: 'select', options: ['true', 'false'] }
+                ]
+            },
+            'http-header': {
+                label: 'Header Auth',
+                fields: [
+                    { id: 'headerName', label: 'Header Name', type: 'text', placeholder: 'Authorization', default: 'Authorization' },
+                    { id: 'headerValue', label: 'Header Value', type: 'password', placeholder: 'Bearer your-token...' }
+                ]
+            },
+            'basic-auth': {
+                label: 'Basic Auth',
+                fields: [
+                    { id: 'username', label: 'Username', type: 'text', required: true },
+                    { id: 'password', label: 'Password', type: 'password', required: true }
+                ]
+            },
+            'bearer-token': {
+                label: 'Bearer Token',
+                fields: [
+                    { id: 'token', label: 'Token', type: 'password', placeholder: 'Your bearer token', required: true }
+                ]
+            },
+            'query-auth': {
+                label: 'Query Auth (URL Parameters)',
+                fields: [
+                    { id: 'paramName', label: 'Parameter Name', type: 'text', placeholder: 'api_key' },
+                    { id: 'paramValue', label: 'Parameter Value', type: 'password' }
+                ]
+            },
+            'aws': {
+                label: 'AWS',
+                fields: [
+                    { id: 'accessKeyId', label: 'Access Key ID', type: 'text', placeholder: 'AKIA...' },
+                    { id: 'secretAccessKey', label: 'Secret Access Key', type: 'password' },
+                    { id: 'region', label: 'Region', type: 'text', placeholder: 'us-east-1' }
+                ]
+            },
+            'azure': {
+                label: 'Microsoft Azure',
+                fields: [
+                    { id: 'tenantId', label: 'Tenant ID', type: 'text' },
+                    { id: 'clientId', label: 'Client ID', type: 'text' },
+                    { id: 'clientSecret', label: 'Client Secret', type: 'password' }
+                ]
+            },
+            'circle': {
+                label: 'Circle API',
+                fields: [
+                    { id: 'apiKey', label: 'API Key', type: 'password', placeholder: 'TEST/LIVE_API_KEY_...' }
+                ]
+            },
+            'circle_developer': {
+                title: 'Circle Developer (Programmable Wallets)',
+                fields: [
+                    { id: 'apiKey', label: 'Circle API Key', type: 'password', placeholder: 'TEST_API_KEY:...' },
+                    { id: 'entitySecret', label: 'Entity Secret (32-byte Hex String)', type: 'password', placeholder: 'Raw hex secret from your secure storage' }
+                ]
+            },
+            'circle_wallet': {
+                title: 'Circle Wallet ID (Optional)',
+                fields: [
+                    { id: 'walletId', label: 'Wallet ID (UUID)', type: 'text', placeholder: 'c6f3...' }
+                ]
+            },
+            'arc_wallet': {
+                title: 'Arc Private Key (Direct Signing)',
+                fields: [
+                    { id: 'privateKey', label: 'Private Key (Hex)', type: 'password', placeholder: '0x...' },
+                    { id: 'walletAddress', label: 'Wallet Address', type: 'text', placeholder: '0x...' }
+                ]
+            },
+            'arcscan': {
+                title: 'ArcScan (Blockscout API)',
+                fields: [
+                    { id: 'apiKey', label: 'Blockscout API Key', type: 'password', placeholder: 'Your ArcScan API Key' }
+                ]
+            }
+        };
+
+        // TYPE CHANGE HANDLER
+        document.getElementById('credType').addEventListener('change', function () {
+            currentType = this.value;
+            renderFields();
+            hasUnsavedChanges = true;
+        });
+
+        function renderFields() {
+            var container = document.getElementById('dynamicFields');
+            var config = credentialTypes[currentType];
+
+            if (!config) {
+                container.innerHTML = '<p style="color:#888">Unknown credential type</p>';
+                return;
+            }
+
+            var html = '';
+
+            config.fields.forEach(function (field) {
+                html += `
+                <div class="form-field">
+                    <label for="${field.id}">${field.label}</label>
+                    <input type="${field.type}" id="${field.id}" class="cred-input" placeholder="${field.placeholder || ''}">
+                </div>
+                `;
+            });
+
+            // Add OAuth box for Google
+            if (config.oauth) {
+                var redirectUri = window.location.origin + '/oauth-callback.php';
+                html += `
+                <div class="oauth-box" style="padding:15px; background:rgba(66, 133, 244, 0.1); border-radius:8px; margin-top:15px;">
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:12px; color:#666;">Redirect URI (copy to Google Console):</label>
+                        <div style="background:#1a1a2e; padding:8px; border-radius:4px; font-family:monospace; font-size:11px; word-break:break-all; margin-top:4px;">
+                            ${redirectUri}
+                            <button onclick="navigator.clipboard.writeText('${redirectUri}'); this.textContent='Copied!'" 
+                                    style="margin-left:10px; padding:2px 8px; font-size:10px; cursor:pointer;">Copy</button>
+                        </div>
+                    </div>
+                    <button type="button" id="oauthConnectBtn" class="btn-google" 
+                            style="background:#4285F4; color:white; border:none; padding:10px 16px; border-radius:4px; cursor:pointer; width:100%; font-weight:600;">
+                        🔗 Connect Google Account
+                    </button>
+                    <div id="oauthStatus" style="margin-top:10px; font-size:12px;"></div>
+                </div>
+                `;
+            }
+
+            container.innerHTML = html;
+
+            // Re-attach listeners
+            container.querySelectorAll('input').forEach(function (input) {
+                input.addEventListener('input', function () { hasUnsavedChanges = true; });
+            });
+
+            // OAuth connect button
+            var oauthBtn = document.getElementById('oauthConnectBtn');
+            if (oauthBtn) {
+                oauthBtn.addEventListener('click', startOAuthFlow);
+            }
+        }
+
+        function startOAuthFlow() {
+            var clientId = document.getElementById('clientId')?.value;
+            if (!clientId) {
+                alert('Please enter your Client ID first');
+                return;
+            }
+
+            var config = credentialTypes[currentType];
+            var redirectUri = window.location.origin + '/oauth-callback.php';
+            var scopes = encodeURIComponent(config.scopes || '');
+
+            var authUrl = 'https://accounts.google.com/o/oauth2/v2/auth?' +
+                'client_id=' + encodeURIComponent(clientId) +
+                '&redirect_uri=' + encodeURIComponent(redirectUri) +
+                '&response_type=code' +
+                '&scope=' + scopes +
+                '&access_type=offline' +
+                '&prompt=consent' +
+                '&state=' + encodeURIComponent(JSON.stringify({ credId: getCredentialIdFromUrl() }));
+
+            // Open popup
+            var popup = window.open(authUrl, 'GoogleOAuth', 'width=500,height=600,scrollbars=yes');
+
+            // Check for completion
+            var statusEl = document.getElementById('oauthStatus');
+            statusEl.textContent = 'Waiting for Google authorization...';
+            statusEl.style.color = '#f59e0b';
+
+            var checkInterval = setInterval(function () {
+                try {
+                    if (popup.closed) {
+                        clearInterval(checkInterval);
+                        // Check if we got tokens
+                        setTimeout(checkOAuthStatus, 500);
+                    }
+                } catch (e) { }
+            }, 500);
+        }
+
+        function checkOAuthStatus() {
+            // In real implementation, check storage/API for tokens
+            var statusEl = document.getElementById('oauthStatus');
+            statusEl.textContent = '✓ Ready to test connection';
+            statusEl.style.color = '#10b981';
+        }
+
+        function getCredentialIdFromUrl() {
+            var params = new URLSearchParams(window.location.search);
+            return params.get('id') || 'new_' + Date.now();
+        }
+
+        // Populate type dropdown
+        (function () {
+            var select = document.getElementById('credType');
+            select.innerHTML = '';
+            Object.keys(credentialTypes).forEach(function (key) {
+                var opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = credentialTypes[key].label;
+                select.appendChild(opt);
+            });
+        })();
+
+        function loadCredential() {
+            var id = getCredentialIdFromUrl();
+            if (!id || id.startsWith('new_')) {
+                document.getElementById('credentialId').innerText = 'ID: New';
+                return;
+            }
+
+            fetch('api.php?action=get_credential&id=' + id)
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success && result.data) {
+                        currentCredential = result.data;
+                        document.getElementById('credentialTitle').value = currentCredential.name || 'Untitled API Key';
+                        document.getElementById('credentialId').innerText = 'ID: ' + currentCredential.id;
+                        document.getElementById('apiName').value = currentCredential.name || '';
+
+                        if (currentCredential.type) {
+                            currentType = currentCredential.type;
+                            document.getElementById('credType').value = currentType;
+                        }
+
+                        renderFields();
+
+                        // Populate fields from data property
+                        var data = currentCredential.data || {};
+                        Object.keys(data).forEach(function (key) {
+                            var input = document.getElementById(key);
+                            if (input) input.value = data[key];
+                        });
+
+                        // Legacy Fallback for top-level fields
+                        if (currentCredential.apiKey && !data.apiKey) {
+                            var apiInput = document.getElementById('apiKey');
+                            if (apiInput) apiInput.value = currentCredential.apiKey;
+                        }
+
+                        hasUnsavedChanges = false;
+                    }
+                })
+                .catch(err => console.error('Load error:', err));
+        }
+
+        // Initialize
+        renderFields();
+        loadCredential();
+
+        // Title Sync
+        document.getElementById('credentialTitle').addEventListener('input', function () {
+            document.getElementById('apiName').value = this.value;
+            hasUnsavedChanges = true;
+        });
+        document.getElementById('apiName').addEventListener('input', function () {
+            document.getElementById('credentialTitle').value = this.value;
+            hasUnsavedChanges = true;
+        });
+
+        // DELETE LOGIC
+        document.getElementById('deleteBtn').addEventListener('click', function () {
+            var modal = document.getElementById('deleteModal');
+            modal.classList.add('active');
+        });
+
+        document.getElementById('cancelDelete').addEventListener('click', function () {
+            document.getElementById('deleteModal').classList.remove('active');
+        });
+
+        document.getElementById('confirmDelete').addEventListener('click', function () {
+            var id = getCredentialIdFromUrl();
+            fetch('api.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete_credential', id: id })
+            })
+                .then(res => res.json())
+                .then(result => {
+                    window.location.href = 'credits.html';
+                });
+        });
+
+        // SAVE LOGIC
+        function saveCredential() {
+            return new Promise((resolve, reject) => {
+                var name = document.getElementById('apiName').value;
+                var type = document.getElementById('credType').value;
+                var config = credentialTypes[type];
+                var data = { type: type };
+
+                config.fields.forEach(function (field) {
+                    var input = document.getElementById(field.id);
+                    if (input) {
+                        data[field.id] = input.value;
+                    }
+                });
+
+                // Save to API
+                fetch('api.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'save_credential',
+                        id: getCredentialIdFromUrl(),
+                        name: name,
+                        type: type,
+                        data: data
+                    })
+                })
+                    .then(res => res.json())
+                    .then(result => {
+                        var notif = document.getElementById('notification');
+                        if (result.success) {
+                            document.getElementById('notificationMessage').innerText = 'Credential Saved!';
+                            document.getElementById('notificationIcon').innerText = '✓';
+                            notif.classList.remove('error');
+                            hasUnsavedChanges = false;
+
+                            // Update ID if it was a new credential
+                            if (getCredentialIdFromUrl().startsWith('new_') && result.id) {
+                                window.history.replaceState(null, '', '?id=' + result.id);
+                                document.getElementById('credentialId').innerText = 'ID: ' + result.id;
+                            }
+
+                            resolve(result);
+                        } else {
+                            document.getElementById('notificationMessage').innerText = result.message || 'Save failed';
+                            document.getElementById('notificationIcon').innerText = '✗';
+                            notif.classList.add('error');
+                            reject(new Error(result.message));
+                        }
+                        notif.classList.add('active'); // Mapped to .notification.active in style.css
+                        setTimeout(() => notif.classList.remove('active'), 3000);
+                    })
+                    .catch(err => {
+                        console.error('Save error:', err);
+                        reject(err);
+                    });
+            });
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', function () {
+            saveCredential().catch(e => console.error(e));
+        });
+
+
+        document.getElementById('apiName').addEventListener('input', function () {
+            hasUnsavedChanges = true;
+        });
+
+        // Browser back button
+        window.history.pushState(null, '', window.location.href);
+        window.addEventListener('popstate', function (e) {
+            if (hasUnsavedChanges) {
+                showUnsavedModal('credits.html');
+                window.history.pushState(null, '', window.location.href);
+            } else {
+                window.location.href = 'credits.html';
+            }
+        });
+
+        // Tab Close / Refresh Protection
+        window.addEventListener('beforeunload', function (e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                e.returnValue = ''; // Chrome requires this
+            }
+        });
+
+        // In-page back button
+        document.querySelector('.back-btn').addEventListener('click', function (e) {
+            if (hasUnsavedChanges) {
+                e.preventDefault();
+                showUnsavedModal('credits.html');
+            }
+        });
+
+        function showUnsavedModal(destination) {
+            var modal = document.getElementById('unsavedModal');
+            modal.classList.add('active');
+
+            document.getElementById('discardChanges').onclick = function () {
+                hasUnsavedChanges = false;
+                modal.classList.remove('active');
+                window.location.href = destination;
+            };
+
+            document.getElementById('saveAndLeave').onclick = function () {
+                var btn = this;
+                var originalText = btn.innerText;
+                btn.innerText = 'Saving...';
+
+                saveCredential().then(() => {
+                    modal.classList.remove('active');
+                    window.location.href = destination;
+                }).catch(() => {
+                    btn.innerText = originalText;
+                    // Error notification already shown by saveCredential
+                });
+            };
+        }
+    </script>
+
+</body>
+
+</html>
